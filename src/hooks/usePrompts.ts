@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Prompt } from '@/db/db';
-import { searchService } from '@/lib/search/SearchService';
+// import { searchService } from '@/lib/search/SearchService';
 import { useEffect, useState } from 'react';
 
 export interface FilterState {

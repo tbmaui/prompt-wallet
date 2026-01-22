@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, useMotionTemplate, useMotionValue, useSpring } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Star, Copy, Edit2, Trash2, Check, RefreshCw } from 'lucide-react';
 import { type Prompt } from '@/db/db';
 import { cn } from '@/lib/utils';
