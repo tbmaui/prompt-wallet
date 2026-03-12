@@ -28,6 +28,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
                     chrome.scripting.executeScript({
                         target: { tabId: newTab.id },
                         func: (textPayload) => {
+                            sessionStorage.setItem('promptWalletExtCapture', textPayload);
                             window.postMessage({ type: 'EXTENSION_CAPTURE', text: textPayload }, '*');
                         },
                         args: [capturedText]

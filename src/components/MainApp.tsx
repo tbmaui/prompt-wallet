@@ -16,6 +16,25 @@ export function MainApp() {
 
     // Deep Link Catcher for Chrome Extension
     useEffect(() => {
+        // 0. Check session storage immediately on mount (if payload injected before React loaded)
+        const checkSessionStorage = () => {
+            const stored = sessionStorage.getItem('promptWalletExtCapture');
+            if (stored) {
+                sessionStorage.removeItem('promptWalletExtCapture');
+                setEditingPrompt({
+                    content_raw: stored,
+                    source_type: 'CLIPBOARD',
+                } as unknown as Prompt);
+                setIsModalOpen(true);
+                return true;
+            }
+            return false;
+        };
+
+        if (checkSessionStorage()) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
         // 1. Listen for secure payload messages from the Chrome Extension
         const handleMessage = (event: MessageEvent) => {
             if (event.data?.type === 'EXTENSION_CAPTURE' && event.data?.text) {
