@@ -124,6 +124,7 @@ export function CaptureModal({ isOpen, onClose, onSave, promptToEdit }: CaptureM
                     }}
                     onSubmit={handleSave}
                     onCancel={reset}
+                    autoCategorizeOnMount={promptToEdit?.source_type === 'CLIPBOARD' && !promptToEdit?.title}
                 />
             )}
         </Modal>

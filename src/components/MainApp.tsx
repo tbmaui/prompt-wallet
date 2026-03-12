@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Header } from '@/components/layout/Header';
 import { usePrompts, type FilterState } from '@/hooks/usePrompts';
@@ -13,6 +13,27 @@ export function MainApp() {
     const { prompts, addPrompt, updatePrompt, movePromptToTrash, restorePrompt, deletePromptPermanently } = usePrompts(searchQuery, filters);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
+
+    // Deep Link Catcher for Chrome Extension
+    useEffect(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        if (searchParams.get('capture') === 'true') {
+            const capturedText = searchParams.get('text');
+            if (capturedText) {
+                // Pre-fill a dummy prompt object with the captured text
+                // So the CaptureModal jumps straight to the EDIT step
+                setEditingPrompt({
+                    content_raw: capturedText,
+                    source_type: 'CLIPBOARD',
+                    // The rest are defaults that will be overridden by the form/AI
+                } as unknown as Prompt);
+                setIsModalOpen(true);
+
+                // Clean up the URL so refreshing doesn't re-trigger it
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+    }, []);
 
     const handleCreateOrUpdatePrompt = (data: Partial<Prompt>) => {
         if (editingPrompt) {

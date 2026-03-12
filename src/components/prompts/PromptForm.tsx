@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { X, Plus, Tag } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Plus, Tag, Wand2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Prompt } from '@/db/db';
+import { autoCategorizePrompt } from '@/lib/ai/categorize';
 
 interface PromptFormProps {
     initialData?: Partial<Prompt>;
     onSubmit: (data: Partial<Prompt>) => void;
     onCancel: () => void;
+    autoCategorizeOnMount?: boolean;
 }
 
 const DISCIPLINES = ['Website', 'Sales', 'Marketing', 'SAAS', 'Strategy', 'Personal', 'Music', 'Image Generation', 'SEO', 'Content Creation', 'Business Planning', 'Other'];
@@ -14,7 +16,7 @@ const DOMAINS = ['Copy Creation', 'Vibe Coding', 'Automation', 'Sales', 'Systems
 const FORMATS = ['Text', 'Code', 'JSON', 'Markdown', 'Table', 'List', 'Image', 'CSV', 'Audio', 'Lyrics', 'MusicXML', 'SVG', 'Figma'];
 const MODELS = ['Generic', 'GPT-4', 'Claude 3', 'DALL-E 3', 'Midjourney', 'Suno', 'Udio', 'Stable Diffusion', 'Llama 3'];
 
-export function PromptForm({ initialData, onSubmit, onCancel }: PromptFormProps) {
+export function PromptForm({ initialData, onSubmit, onCancel, autoCategorizeOnMount }: PromptFormProps) {
     const [title, setTitle] = useState(initialData?.title || '');
     const [content, setContent] = useState(initialData?.content_raw || '');
     const [tags, setTags] = useState<string[]>(initialData?.tags || []);
@@ -25,6 +27,40 @@ export function PromptForm({ initialData, onSubmit, onCancel }: PromptFormProps)
     const [selectedDomains, setSelectedDomains] = useState<string[]>(initialData?.domain || []);
     const [format, setFormat] = useState(initialData?.format || '');
     const [model, setModel] = useState(initialData?.model || '');
+
+    const [isCategorizing, setIsCategorizing] = useState(false);
+
+    const handleAutoCategorize = async () => {
+        if (!content.trim()) return;
+
+        setIsCategorizing(true);
+        try {
+            const result = await autoCategorizePrompt(content);
+            if (result) {
+                if (!title || title === 'Untitled' || title === 'Untitled Auto-Prompt') setTitle(result.title);
+                setDiscipline(result.discipline);
+                setSelectedDomains(result.domain);
+                setFormat(result.format);
+                setModel(result.model);
+
+                // Merge tags
+                const newTags = [...new Set([...tags, ...result.tags])];
+                setTags(newTags);
+            }
+        } catch (error) {
+            console.error("Failed to auto-categorize:", error);
+        } finally {
+            setIsCategorizing(false);
+        }
+    };
+
+    // Auto-categorize on mount if triggered by extension deep link
+    useEffect(() => {
+        if (autoCategorizeOnMount && content && !title) {
+            handleAutoCategorize();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoCategorizeOnMount]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -115,8 +151,19 @@ export function PromptForm({ initialData, onSubmit, onCancel }: PromptFormProps)
                 />
             </div>
 
-            <div className="space-y-3 pt-2 border-t">
-                <h4 className="text-sm font-medium text-muted-foreground">Categorization</h4>
+            <div className="space-y-3 pt-4 border-t relative">
+                <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-muted-foreground">Categorization</h4>
+                    <button
+                        type="button"
+                        onClick={handleAutoCategorize}
+                        disabled={isCategorizing || !content.trim()}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:hover:bg-indigo-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-indigo-200 dark:border-indigo-500/20"
+                    >
+                        {isCategorizing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Wand2 className="w-3.5 h-3.5" />}
+                        Auto-Categorize
+                    </button>
+                </div>
 
                 <div>
                     <label className="block text-xs font-medium text-foreground mb-1.5">Domains</label>
