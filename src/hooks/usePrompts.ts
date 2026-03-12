@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Prompt } from '@/db/db';
-// import { searchService } from '@/lib/search/SearchService';
+import { pushPrompt, deletePromptRemote, pullAllPrompts } from '@/lib/supabase/sync';
 import { useEffect, useState } from 'react';
 
 export interface FilterState {
@@ -14,28 +14,22 @@ export function usePrompts(searchQuery: string = '', filters: FilterState = { di
     const allPrompts = useLiveQuery(() => db.prompts.orderBy('created_at').reverse().toArray());
     const [searchResults, setSearchResults] = useState<Prompt[] | null>(null);
 
-    // Indexing effect - DISABLED FOR DEBUGGING
-    /*
+    // ── Pull from Supabase on mount to restore cloud data ──────────────────
     useEffect(() => {
-        if (allPrompts) {
-            allPrompts.forEach(p => searchService.add(p));
-        }
-    }, [allPrompts]);
-    */
+        pullAllPrompts();
+    }, []);
 
-    // Search and Filter effect
+    // ── Search and Filter effect ────────────────────────────────────────────
     useEffect(() => {
         const performSearch = async () => {
             let results: Prompt[] | null = null;
 
             // 1. Text Search
             if (searchQuery.trim()) {
-                // FALLBACK SEARCH: Simple text matching
                 results = (allPrompts || []).filter(p =>
                     p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     p.content_normalized.toLowerCase().includes(searchQuery.toLowerCase())
                 );
-                // results = await searchService.search(searchQuery);
             } else {
                 results = allPrompts || [];
             }
@@ -46,7 +40,6 @@ export function usePrompts(searchQuery: string = '', filters: FilterState = { di
             } else if (filters.view === 'favorites') {
                 results = results.filter(p => !p.is_archived && p.is_favorite);
             } else {
-                // 'all' view - default
                 results = results.filter(p => !p.is_archived);
             }
 
@@ -60,12 +53,12 @@ export function usePrompts(searchQuery: string = '', filters: FilterState = { di
                 });
             }
 
-            // Always set results to ensure filtering applies even if just browsing
             setSearchResults(results);
         };
         performSearch();
     }, [searchQuery, filters, allPrompts]);
 
+    // ── Write operations (local Dexie + cloud Supabase) ────────────────────
     const addPrompt = async (prompt: Omit<Prompt, 'id' | 'created_at' | 'updated_at'>) => {
         const now = Date.now();
         const newPrompt: Prompt = {
@@ -73,7 +66,6 @@ export function usePrompts(searchQuery: string = '', filters: FilterState = { di
             id: crypto.randomUUID(),
             created_at: now,
             updated_at: now,
-            // Ensure defaults for new fields
             discipline: prompt.discipline || 'Website',
             domain: prompt.domain || [],
             format: prompt.format,
@@ -81,9 +73,8 @@ export function usePrompts(searchQuery: string = '', filters: FilterState = { di
             is_favorite: false,
             is_archived: false,
         };
-
         await db.prompts.add(newPrompt);
-        // searchService.add(newPrompt);
+        pushPrompt(newPrompt); // fire-and-forget cloud sync
     };
 
     const updatePrompt = async (id: string, updates: Partial<Prompt>) => {
@@ -91,24 +82,21 @@ export function usePrompts(searchQuery: string = '', filters: FilterState = { di
         if (prompt) {
             const updatedPrompt = { ...prompt, ...updates, updated_at: Date.now() };
             await db.prompts.put(updatedPrompt);
-            // searchService.update(updatedPrompt);
+            pushPrompt(updatedPrompt); // fire-and-forget cloud sync
         }
     };
 
-    // Soft Delete (Move to Trash)
     const movePromptToTrash = async (id: string) => {
         await updatePrompt(id, { is_archived: true });
     };
 
-    // Restore from Trash
     const restorePrompt = async (id: string) => {
         await updatePrompt(id, { is_archived: false });
     };
 
-    // Hard Delete (Permanent)
     const deletePromptPermanently = async (id: string) => {
         await db.prompts.delete(id);
-        // searchService.remove(id);
+        deletePromptRemote(id); // fire-and-forget cloud sync
     };
 
     return {

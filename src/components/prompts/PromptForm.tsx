@@ -9,7 +9,7 @@ interface PromptFormProps {
     onCancel: () => void;
 }
 
-const DISCIPLINES = ['Website', 'Sales', 'Marketing', 'SAAS', 'Strategy', 'Personal', 'Music', 'Image Generation', 'Other'];
+const DISCIPLINES = ['Website', 'Sales', 'Marketing', 'SAAS', 'Strategy', 'Personal', 'Music', 'Image Generation', 'SEO', 'Content Creation', 'Business Planning', 'Other'];
 const DOMAINS = ['Copy Creation', 'Vibe Coding', 'Automation', 'Sales', 'Systems', 'Story'];
 const FORMATS = ['Text', 'Code', 'JSON', 'Markdown', 'Table', 'List', 'Image', 'CSV', 'Audio', 'Lyrics', 'MusicXML', 'SVG', 'Figma'];
 const MODELS = ['Generic', 'GPT-4', 'Claude 3', 'DALL-E 3', 'Midjourney', 'Suno', 'Udio', 'Stable Diffusion', 'Llama 3'];

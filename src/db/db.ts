@@ -11,7 +11,7 @@ export interface Prompt {
     source_type: 'MANUAL' | 'OCR' | 'CLIPBOARD' | 'IMPORT';
 
     // Taxonomy Fields
-    discipline: 'Website' | 'Sales' | 'Marketing' | 'SAAS' | 'Strategy' | 'Personal' | 'Music' | 'Image Generation' | 'Other';
+    discipline: 'Website' | 'Sales' | 'Marketing' | 'SAAS' | 'Strategy' | 'Personal' | 'Music' | 'Image Generation' | 'SEO' | 'Content Creation' | 'Business Planning' | 'Other';
     domain?: string[];
     format?: string;
     model?: string;

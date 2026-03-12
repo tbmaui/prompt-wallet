@@ -60,7 +60,7 @@ export function Sidebar({ filters, onFilterChange }: SidebarProps) {
                         Disciplines
                     </h2>
                     <div className="space-y-1">
-                        {['Website', 'Sales', 'Marketing', 'SAAS', 'Strategy', 'Personal', 'Music', 'Image Generation', 'Other'].map(discipline => (
+                        {['Website', 'Sales', 'Marketing', 'SAAS', 'Strategy', 'Personal', 'Music', 'Image Generation', 'SEO', 'Content Creation', 'Business Planning', 'Other'].map(discipline => (
                             <NavItem
                                 key={discipline}
                                 icon={Layers}

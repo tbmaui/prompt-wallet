@@ -14,6 +14,9 @@ const DISCIPLINE_COLOR_MAP: Record<string, string> = {
     'Personal': 'gray',
     'Music': 'rose',
     'Image Generation': 'indigo',
+    'SEO': 'cyan',
+    'Content Creation': 'amber',
+    'Business Planning': 'violet',
     'Other': 'slate'
 };
 
