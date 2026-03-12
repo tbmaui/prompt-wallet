@@ -23,7 +23,7 @@ export function Navbar() {
                         to="/app"
                         className="px-5 py-2.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-black font-semibold text-sm hover:opacity-90 transition-opacity"
                     >
-                        Launch App
+                        Open Library
                     </Link>
                 </div>
             </div>

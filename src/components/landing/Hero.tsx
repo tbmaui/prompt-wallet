@@ -54,12 +54,9 @@ export function Hero() {
                                 to="/app"
                                 className="w-full sm:w-auto px-8 py-4 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 group"
                             >
-                                Get Started Free
+                                Open Library
                                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </Link>
-                            <button className="w-full sm:w-auto px-8 py-4 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white font-semibold hover:bg-slate-50 dark:hover:bg-white/10 transition-colors">
-                                View Demo
-                            </button>
                         </motion.div>
                     </div>
 
