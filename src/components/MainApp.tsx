@@ -70,7 +70,7 @@ export function MainApp() {
     }, []);
 
     const handleCreateOrUpdatePrompt = (data: Partial<Prompt>) => {
-        if (editingPrompt) {
+        if (editingPrompt && editingPrompt.id) {
             updatePrompt(editingPrompt.id, data);
         } else {
             addPrompt({
