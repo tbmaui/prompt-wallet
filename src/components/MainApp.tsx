@@ -16,6 +16,19 @@ export function MainApp() {
 
     // Deep Link Catcher for Chrome Extension
     useEffect(() => {
+        // 1. Listen for secure payload messages from the Chrome Extension
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data?.type === 'EXTENSION_CAPTURE' && event.data?.text) {
+                setEditingPrompt({
+                    content_raw: event.data.text,
+                    source_type: 'CLIPBOARD',
+                } as unknown as Prompt);
+                setIsModalOpen(true);
+            }
+        };
+        window.addEventListener('message', handleMessage);
+
+        // 2. Legacy fallback: parse from URL if it was short enough to fit
         const searchParams = new URLSearchParams(window.location.search);
         if (searchParams.get('capture') === 'true') {
             const capturedText = searchParams.get('text');
@@ -33,6 +46,8 @@ export function MainApp() {
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
+
+        return () => window.removeEventListener('message', handleMessage);
     }, []);
 
     const handleCreateOrUpdatePrompt = (data: Partial<Prompt>) => {

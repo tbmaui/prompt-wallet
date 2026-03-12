@@ -3,11 +3,6 @@
     "name": "Prompt Wallet Capture",
     "version": "1.0.0",
     "description": "Right click highlighted text to send it directly to your PromptWallet library.",
-    "icons": {
-        "16": "icons/icon16.png",
-        "48": "icons/icon48.png",
-        "128": "icons/icon128.png"
-    },
     "permissions": [
         "contextMenus",
         "activeTab",
