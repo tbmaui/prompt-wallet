@@ -1,7 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Prompt } from '@/db/db';
-import { pushPrompt, deletePromptRemote, pullAllPrompts } from '@/lib/supabase/sync';
+import { pushPrompt, deletePromptRemote, pullAllPrompts, pushAllLocalPrompts } from '@/lib/supabase/sync';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 export interface FilterState {
     discipline: string;
@@ -11,13 +12,22 @@ export interface FilterState {
 }
 
 export function usePrompts(searchQuery: string = '', filters: FilterState = { discipline: '', domain: '', model: '', view: 'all' }) {
+    const { user } = useAuth();
+    const userId = user?.id;
     const allPrompts = useLiveQuery(() => db.prompts.orderBy('created_at').reverse().toArray());
     const [searchResults, setSearchResults] = useState<Prompt[] | null>(null);
 
     // ── Pull from Supabase on mount to restore cloud data ──────────────────
     useEffect(() => {
-        pullAllPrompts();
-    }, []);
+        if (!userId) return;
+
+        const syncPrompts = async () => {
+            await pushAllLocalPrompts();
+            await pullAllPrompts();
+        };
+
+        syncPrompts();
+    }, [userId]);
 
     // ── Search and Filter effect ────────────────────────────────────────────
     useEffect(() => {

@@ -1,7 +1,8 @@
-import { Search, Plus, Moon, Sun, Download, Upload } from 'lucide-react';
+import { Search, Plus, Moon, Sun, Download, Upload, LogOut } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
 import { ExportService } from '@/lib/export/ExportService';
 import { useRef } from 'react';
+import { useAuth } from '@/lib/supabase/auth-context';
 
 interface HeaderProps {
     onSearch: (query: string) => void;
@@ -10,6 +11,7 @@ interface HeaderProps {
 
 export function Header({ onSearch, onNewPrompt }: HeaderProps) {
     const { theme, setTheme } = useTheme();
+    const { user, signOut } = useAuth();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleImportClick = () => {
@@ -93,6 +95,15 @@ export function Header({ onSearch, onNewPrompt }: HeaderProps) {
                 >
                     <Plus className="w-4 h-4 mr-2" />
                     New Prompt
+                </button>
+
+                <button
+                    onClick={() => signOut()}
+                    className="inline-flex items-center justify-center rounded-md w-9 h-9 hover:bg-accent hover:text-accent-foreground transition-colors"
+                    title={user?.email ? `Sign out ${user.email}` : 'Sign out'}
+                >
+                    <LogOut className="h-4 w-4" />
+                    <span className="sr-only">Sign out</span>
                 </button>
             </div>
         </header>

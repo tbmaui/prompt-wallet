@@ -6,8 +6,17 @@ import { CaptureModal } from '@/components/prompts/CaptureModal';
 import { type Prompt } from '@/db/db';
 import { FilterBar } from '@/components/prompts/FilterBar';
 import { PromptCard } from '@/components/prompts/PromptCard';
+import { AuthGate } from '@/components/auth/AuthGate';
 
 export function MainApp() {
+    return (
+        <AuthGate>
+            <AuthenticatedMainApp />
+        </AuthGate>
+    );
+}
+
+function AuthenticatedMainApp() {
     const [searchQuery, setSearchQuery] = useState('');
     const [filters, setFilters] = useState<FilterState>({ discipline: '', domain: '', model: '', view: 'all' });
     const { prompts, addPrompt, updatePrompt, movePromptToTrash, restorePrompt, deletePromptPermanently } = usePrompts(searchQuery, filters);

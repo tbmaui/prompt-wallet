@@ -1,22 +1,24 @@
 import { supabase } from './client';
 import { db, type Prompt } from '@/db/db';
 
-// ─── Stable anonymous user identity ──────────────────────────────────────────
-const USER_ID_KEY = 'prompt_wallet_user_id';
+export async function getUserId(): Promise<string | null> {
+    if (!supabase) return null;
 
-export function getUserId(): string {
-    let id = localStorage.getItem(USER_ID_KEY);
-    if (!id) {
-        id = crypto.randomUUID();
-        localStorage.setItem(USER_ID_KEY, id);
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+        console.error('[Supabase] getUser error:', error.message);
+        return null;
     }
-    return id;
+
+    return data.user?.id ?? null;
 }
 
-// ─── Push a single prompt to Supabase (upsert) ───────────────────────────────
 export async function pushPrompt(prompt: Prompt): Promise<void> {
     if (!supabase) return;
-    const userId = getUserId();
+
+    const userId = await getUserId();
+    if (!userId) return;
+
     const { error } = await supabase
         .from('prompts')
         .upsert({ ...prompt, user_id: userId }, { onConflict: 'id' });
@@ -26,10 +28,12 @@ export async function pushPrompt(prompt: Prompt): Promise<void> {
     }
 }
 
-// ─── Delete a prompt from Supabase ───────────────────────────────────────────
 export async function deletePromptRemote(id: string): Promise<void> {
     if (!supabase) return;
-    const userId = getUserId();
+
+    const userId = await getUserId();
+    if (!userId) return;
+
     const { error } = await supabase
         .from('prompts')
         .delete()
@@ -41,11 +45,12 @@ export async function deletePromptRemote(id: string): Promise<void> {
     }
 }
 
-// ─── Pull all prompts from Supabase and merge into local Dexie ───────────────
-// Cloud wins on conflict (by updated_at), so latest edit always survives.
 export async function pullAllPrompts(): Promise<void> {
     if (!supabase) return;
-    const userId = getUserId();
+
+    const userId = await getUserId();
+    if (!userId) return;
+
     const { data, error } = await supabase
         .from('prompts')
         .select('*')
@@ -58,7 +63,6 @@ export async function pullAllPrompts(): Promise<void> {
 
     if (!data || data.length === 0) return;
 
-    // Merge: for each cloud prompt, upsert into Dexie only if cloud version is newer
     const localPrompts = await db.prompts.bulkGet(data.map((p) => p.id));
     const toUpsert: Prompt[] = [];
 
@@ -75,4 +79,11 @@ export async function pullAllPrompts(): Promise<void> {
         await db.prompts.bulkPut(toUpsert);
         console.log(`[Supabase] Restored ${toUpsert.length} prompts from cloud.`);
     }
+}
+
+export async function pushAllLocalPrompts(): Promise<void> {
+    if (!supabase) return;
+
+    const prompts = await db.prompts.toArray();
+    await Promise.all(prompts.map((prompt) => pushPrompt(prompt)));
 }
