@@ -15,6 +15,7 @@ export function getUserId(): string {
 
 // ─── Push a single prompt to Supabase (upsert) ───────────────────────────────
 export async function pushPrompt(prompt: Prompt): Promise<void> {
+    if (!supabase) return;
     const userId = getUserId();
     const { error } = await supabase
         .from('prompts')
@@ -27,6 +28,7 @@ export async function pushPrompt(prompt: Prompt): Promise<void> {
 
 // ─── Delete a prompt from Supabase ───────────────────────────────────────────
 export async function deletePromptRemote(id: string): Promise<void> {
+    if (!supabase) return;
     const userId = getUserId();
     const { error } = await supabase
         .from('prompts')
@@ -42,6 +44,7 @@ export async function deletePromptRemote(id: string): Promise<void> {
 // ─── Pull all prompts from Supabase and merge into local Dexie ───────────────
 // Cloud wins on conflict (by updated_at), so latest edit always survives.
 export async function pullAllPrompts(): Promise<void> {
+    if (!supabase) return;
     const userId = getUserId();
     const { data, error } = await supabase
         .from('prompts')
