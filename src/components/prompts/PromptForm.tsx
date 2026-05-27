@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Plus, Tag, Wand2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Prompt } from '@/db/db';
@@ -29,6 +29,7 @@ export function PromptForm({ initialData, onSubmit, onCancel, autoCategorizeOnMo
     const [model, setModel] = useState(initialData?.model || '');
 
     const [isCategorizing, setIsCategorizing] = useState(false);
+    const hasAutoCategorizedRef = useRef(false);
 
     const handleAutoCategorize = async () => {
         if (!content.trim()) return;
@@ -44,8 +45,7 @@ export function PromptForm({ initialData, onSubmit, onCancel, autoCategorizeOnMo
                 setModel(result.model);
 
                 // Merge tags
-                const newTags = [...new Set([...tags, ...result.tags])];
-                setTags(newTags);
+                setTags(currentTags => [...new Set([...currentTags, ...result.tags])]);
             }
         } catch (error) {
             console.error("Failed to auto-categorize:", error);
@@ -56,11 +56,12 @@ export function PromptForm({ initialData, onSubmit, onCancel, autoCategorizeOnMo
 
     // Auto-categorize on mount if triggered by extension deep link
     useEffect(() => {
-        if (autoCategorizeOnMount && content && !title) {
+        if (autoCategorizeOnMount && content && !title && !hasAutoCategorizedRef.current) {
+            hasAutoCategorizedRef.current = true;
             handleAutoCategorize();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [autoCategorizeOnMount]);
+    }, [autoCategorizeOnMount, content, title]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -118,7 +119,7 @@ export function PromptForm({ initialData, onSubmit, onCancel, autoCategorizeOnMo
                     <label className="block text-sm font-medium text-foreground mb-1">Discipline</label>
                     <select
                         value={discipline}
-                        onChange={(e) => setDiscipline(e.target.value as any)}
+                        onChange={(e) => setDiscipline(e.target.value as Prompt['discipline'])}
                         className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring text-black dark:text-white"
                     >
                         {DISCIPLINES.map(d => <option key={d} value={d} className="text-black dark:text-white bg-white dark:bg-zinc-950">{d}</option>)}

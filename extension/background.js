@@ -1,3 +1,24 @@
+const PROMPT_WALLET_CAPTURE_URL = 'https://prompt-wallet-thaddeus-projects-5acae472.vercel.app/app?capture=true';
+
+function openPromptWalletWithCapture(textPayload) {
+    chrome.tabs.create({ url: PROMPT_WALLET_CAPTURE_URL }, (newTab) => {
+        chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
+            if (tabId === newTab.id && changeInfo.status === 'complete') {
+                chrome.tabs.onUpdated.removeListener(listener);
+
+                chrome.scripting.executeScript({
+                    target: { tabId: newTab.id },
+                    func: (textPayload) => {
+                        sessionStorage.setItem('promptWalletExtCapture', textPayload);
+                        window.postMessage({ type: 'EXTENSION_CAPTURE', text: textPayload }, '*');
+                    },
+                    args: [textPayload]
+                });
+            }
+        });
+    });
+}
+
 // Wait for the extension to be installed or updated
 chrome.runtime.onInstalled.addListener(() => {
     // Create the context menu
@@ -81,50 +102,13 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 
             if (!capturedText) return;
 
-            // Target URL for the local instance
-            const targetUrl = 'http://localhost:3000/?capture=true';
-
-            // Open a new tab with the target URL
-            chrome.tabs.create({ url: targetUrl }, (newTab) => {
-                // Wait for the new tab to finish loading
-                chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
-                    if (tabId === newTab.id && changeInfo.status === 'complete') {
-                        // Remove the listener so it only fires once
-                        chrome.tabs.onUpdated.removeListener(listener);
-
-                        // Inject a script to pass the large text payload securely to the React app
-                        chrome.scripting.executeScript({
-                            target: { tabId: newTab.id },
-                            func: (textPayload) => {
-                                sessionStorage.setItem('promptWalletExtCapture', textPayload);
-                                window.postMessage({ type: 'EXTENSION_CAPTURE', text: textPayload }, '*');
-                            },
-                            args: [capturedText]
-                        });
-                    }
-                });
-            });
+            openPromptWalletWithCapture(capturedText);
         }).catch((err) => {
             console.error("Failed to extract formatted text: ", err);
 
             // Fallback if we cannot inject a script (e.g. chrome:// URIs)
             if (info.selectionText) {
-                const targetUrl = 'http://localhost:3000/?capture=true';
-                chrome.tabs.create({ url: targetUrl }, (newTab) => {
-                    chrome.tabs.onUpdated.addListener(function listener(tabId, changeInfo) {
-                        if (tabId === newTab.id && changeInfo.status === 'complete') {
-                            chrome.tabs.onUpdated.removeListener(listener);
-                            chrome.scripting.executeScript({
-                                target: { tabId: newTab.id },
-                                func: (textPayload) => {
-                                    sessionStorage.setItem('promptWalletExtCapture', textPayload);
-                                    window.postMessage({ type: 'EXTENSION_CAPTURE', text: textPayload }, '*');
-                                },
-                                args: [info.selectionText]
-                            });
-                        }
-                    });
-                });
+                openPromptWalletWithCapture(info.selectionText);
             }
         });
     }

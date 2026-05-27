@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Prompt Wallet Capture",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Right click highlighted text to send it directly to your PromptWallet library.",
     "permissions": [
         "contextMenus",
@@ -9,7 +9,7 @@
         "scripting"
     ],
     "host_permissions": [
-        "http://localhost:3000/*",
+        "https://prompt-wallet-thaddeus-projects-5acae472.vercel.app/*",
         "https://*/*"
     ],
     "background": {
